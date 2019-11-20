@@ -1,0 +1,43 @@
+Prepare a model for glass classification using KNN
+
+ibrary(caTools)
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(class)
+library(corrplot)
+glass <- read.csv(file.choose())
+##EDA##
+View(glass)
+str(glass)
+summary(glass)
+## we should covert the type data in factors##
+glass$Type=as.factor(glass$Type)
+View(glass)
+str(glass)
+## sandardize the data##
+standard.features <- scale(glass[,1:9])
+
+#Join the standardized data with the target column
+data <- cbind(standard.features,glass[10])
+#Check if there are any missing values to impute. 
+anyNA(data)
+## There are no null values##
+# Data partition
+set.seed(123)
+ind <- sample(2,nrow(data), replace = T, prob = c(0.7,0.3))
+train <- data[ind==1,]
+test <- data[ind==2,]
+
+# KNN Model 
+
+trcontrol <- trainControl(method = "repeatedcv", number = 10,repeats = 2
+                          # classprobs are needed when u want to select ROC for optimal K Value
+)
+set.seed(222)
+fit <- train(Type ~., data = train, method = 'knn', tuneLength = 20,
+             trControl = trcontrol, preProc = c("center","scale"))
+plot(fit)
+fit
+pred <- predict(fit, newdata = test )
+confusionMatrix(pred, test$Type)
